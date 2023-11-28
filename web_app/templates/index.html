@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" href="static/css/editor.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+  <script type='text/javascript' src='static/js/ajax_queries.js'></script>
+  <script type='text/javascript'>var curLang = "{{ lang }}";</script>
+{% if lang %}
+  <title>Run Uniparser: {{ languages[lang].name }}</title>
+{% else %}
+  <title>Run Uniparser</title>
+{% endif %}
+</head>
+<body>
+<div class="container main">
+{% if lang %}
+	<h2>Analyze sentence in {{ languages[lang].name }}</h2>
+	<p class="lead">Type your sentence and click &laquo;Analyze&raquo; or press Enter.</p>
+	<div class="row" id="main_row">
+		<div class="col-sm-12">
+			<form id="input_form">
+				<div class="form-group row">
+					<div class="col-sm-10"><input type="text" class="form-control form-control-lexref" name="sentence" id="sentence"></div>
+				</div>
+			</form>
+		</div>
+	</div>
+	<button id="analyze" type="button" class="btn btn-primary btn-lg">Analyze</button>
+	<div class="alert alert-success alert-dismissible fade" role="alert" id="response_message"></div>
+{% else %}
+	<h2>Available Uniparser analyzers:</h2>
+	<p class="lead">Choose language:</p>
+	<ul>
+		<li><a href='/udmurt'>Udmurt</a></li>
+		<li><a href='/beserman'>Beserman (Latin-based script)</a></li>
+		<li><a href='/komi_zyrian'>Komi Zyrian</a></li>
+		<li><a href='/meadow_mari'>Meadow Mari</a></li>
+		<li><a href='/erzya'>Erzya</a></li>
+		<li><a href='/moksha'>Moksha</a></li>
+		<li><a href='/albanian'>Albanian</a></li>
+		<li><a href='/eastern_armenian'>Eastern Armenian</a></li>
+		<li><a href='/buryat'>Buryat</a></li>
+		<li><a href='/ossetic'>Ossetic (Iron)</a></li>
+	</ul>
+{% endif %}
+
+{% if lang %}
+	<div class="row">
+	<div class="col-sm-10" id="result"></div>
+	</div>
+{% endif %}
+</div>
+</body>
+</html>
