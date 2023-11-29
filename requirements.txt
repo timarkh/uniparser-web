@@ -1,0 +1,15 @@
+# Requirements file for python modules, to be used with pip (pip3 install -r requirements.txt).
+
+Flask>=2.1.0
+uniparser_albanian
+uniparser_beserman_lat
+uniparser_buryat
+uniparser_eastern_armenian
+uniparser_erzya
+uniparser_komi_zyrian
+uniparser_meadow_mari
+uniparser_moksha
+uniparser_ossetic
+uniparser_turoyo
+uniparser_udmurt
+uniparser_urmi

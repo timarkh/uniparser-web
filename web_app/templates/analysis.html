@@ -1,6 +1,6 @@
-<table>
+<table class="analysis_table">
 <tr>
-{% for w in words %}
+{% for w in words.default %}
 	<td>
 	<p class="wf">{{ w[0].wf }}</p>
 	{% for ana in w %}
@@ -17,3 +17,29 @@
 {% endfor %}
 </tr>
 </table>
+
+{% for k in words %}
+{% if k != "default" %}
+	<p class="lead">Transliteration: {{ k }}</p>
+	<table class="analysis_table">
+		<tr>
+		{% for w in words[k] %}
+			<td>
+			<p class="wf">{{ w[0].wf }}</p>
+			{% for ana in w %}
+			{% if loop.index > 1 %}<hr>{% endif %}
+			{% if ana.wfGlossed %}<p class="wfGlossed"><nobr>{{ ana.wfGlossed }}</nobr></p>{% endif %}
+			{% if ana.gloss %}<p class="gloss"><nobr>{{ ana.gloss }}</nobr></p>{% endif %}
+			{% if ana.lemma %}<p class="lemma">{{ ana.lemma }}</p>{% endif %}
+			{% if ana.gramm %}<p class="gramm">{{ ana.gramm | join(",") }}</p>{% endif %}
+			{% if ana.trans_en %}<p class="trans">{{ ana.trans_en }}</p>{% endif %}
+			{% if ana.trans_de %}<p class="trans">{{ ana.trans_de }}</p>{% endif %}
+			{% if ana.trans_ru %}<p class="trans">{{ ana.trans_ru }}</p>{% endif %}
+			{% endfor %}
+			</td>
+		{% endfor %}
+		</tr>
+	</table>
+{% endif %}
+{% endfor %}
+
