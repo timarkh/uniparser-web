@@ -31,10 +31,10 @@ class Analyzer:
 
     def __init__(self):
         self.langs = {
-            # 'albanian': {
-            #     'name': 'Albanian',
-            #     'analyzer': AlbanianAnalyzer()
-            # },
+            'albanian': {
+                'name': 'Albanian',
+                'analyzer': AlbanianAnalyzer()
+            },
             'beserman': {
                 'name': 'Beserman (Latin-based)',
                 'analyzer': BesermanLatAnalyzer(),
@@ -44,51 +44,51 @@ class Analyzer:
                     'Cyrillic': beserman_translit_cyrillic
                 }
             },
-            # 'buryat': {
-            #     'name': 'Buryat',
-            #     'analyzer': BuryatAnalyzer()
-            # },
-            # 'eastern_armenian': {
-            #     'name': 'Eastern Armenian',
-            #     'analyzer': EasternArmenianAnalyzer(),
-            #     'translit': {
-            #         'Quasi-Meillet': armenian_translit_meillet
-            #     }
-            # },
-            # 'erzya': {
-            #     'name': 'Erzya',
-            #     'analyzer': ErzyaAnalyzer(),
-            #     'translit': {
-            #         'UPA': erzya_translit_upa
-            #     }
-            # },
-            # 'komi_zyrian': {
-            #     'name': 'Komi Zyrian',
-            #     'analyzer': KomiZyrianAnalyzer()
-            # },
-            # 'meadow_mari': {
-            #     'name': 'Meadow Mari',
-            #     'analyzer': MeadowMariAnalyzer()
-            # },
-            # 'moksha': {
-            #     'name': 'Moksha',
-            #     'analyzer': MokshaAnalyzer()
-            # },
-            # 'ossetic': {
-            #     'name': 'Ossetic (Iron)',
-            #     'analyzer': OsseticAnalyzer()
-            # },
-            # 'turoyo': {
-            #     'name': 'Ṭuroyo',
-            #     'analyzer': TuroyoAnalyzer()
-            # },
-            # 'udmurt': {
-            #     'name': 'Udmurt',
-            #     'analyzer': UdmurtAnalyzer(),
-            #     'translit': {
-            #         'UPA': udmurt_translit_upa
-            #     }
-            # },
+            'buryat': {
+                'name': 'Buryat',
+                'analyzer': BuryatAnalyzer()
+            },
+            'eastern_armenian': {
+                'name': 'Eastern Armenian',
+                'analyzer': EasternArmenianAnalyzer(),
+                'translit': {
+                    'Quasi-Meillet': armenian_translit_meillet
+                }
+            },
+            'erzya': {
+                'name': 'Erzya',
+                'analyzer': ErzyaAnalyzer(),
+                'translit': {
+                    'UPA': erzya_translit_upa
+                }
+            },
+            'komi_zyrian': {
+                'name': 'Komi Zyrian',
+                'analyzer': KomiZyrianAnalyzer()
+            },
+            'meadow_mari': {
+                'name': 'Meadow Mari',
+                'analyzer': MeadowMariAnalyzer()
+            },
+            'moksha': {
+                'name': 'Moksha',
+                'analyzer': MokshaAnalyzer()
+            },
+            'ossetic': {
+                'name': 'Ossetic (Iron)',
+                'analyzer': OsseticAnalyzer()
+            },
+            'turoyo': {
+                'name': 'Ṭuroyo',
+                'analyzer': TuroyoAnalyzer()
+            },
+            'udmurt': {
+                'name': 'Udmurt',
+                'analyzer': UdmurtAnalyzer(),
+                'translit': {
+                    'UPA': udmurt_translit_upa
+                }
+            },
             'urmi': {
                 'name': 'Christian Urmi (Assyrian Neo-Aramaic), Latin-based',
                 'analyzer': UrmiAnalyzer()
