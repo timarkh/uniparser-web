@@ -21,13 +21,23 @@
 <body>
 <div class="container main">
 {% if lang %}
+<script type='text/javascript'>var mode='{{ mode }}';</script>
+{% if mode=="sentence" %}
 	<h2>Analyze sentence in {{ languages[lang].name }}</h2>
 	<p class="lead">Type your sentence and click &laquo;Analyze&raquo; or press Enter.</p>
+{% elif mode=="paper" %}
+	<h2>Gloss a paper in {{ languages[lang].name }}</h2>
+	<p class="lead">Paste your text and click &laquo;Analyze&raquo; or press Enter.</p>
+{% endif %}
 	<div class="row" id="main_row">
 		<div class="col-sm-12">
 			<form id="input_form">
 				<div class="form-group row">
+{% if mode=="sentence" %}
 					<div class="col-sm-10"><input type="text" class="form-control form-control-lexref" name="sentence" id="sentence"></div>
+{% elif mode=="paper" %}
+					<div class="col-sm-10"><textarea class="form-control form-control-lexref" name="sentence" id="sentence" rows="20" cols="150"></textarea></div>
+{% endif %}
 				</div>
 			</form>
 		</div>

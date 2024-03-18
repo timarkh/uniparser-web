@@ -125,3 +125,8 @@ td {
 	border: 1px darkgray dashed;
 	border-radius: 2px;
 }
+
+.example td {
+	padding: 0px 6px;
+	vertical-align: middle;
+}

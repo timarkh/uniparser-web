@@ -2,11 +2,12 @@ from flask import Flask, request, render_template, jsonify
 import copy
 from datetime import datetime
 import json
-from .analyzer import Analyzer
+from .analyzer import Analyzer, PaperParser
 
 app = Flask(__name__)
 
 a = Analyzer()
+pp = PaperParser(a)
 
 
 def copy_request_args():
@@ -30,12 +31,15 @@ def index():
 @app.route('/<lang>')
 def index_lang(lang):
     if lang in a.langs:
-        return render_template('index.html', lang=lang, languages=a.langs)
+        if request.args is not None and 'mode' in request.args and request.args['mode'] == 'paper':
+            return render_template('index.html', lang=lang, languages=a.langs, mode='paper')
+        else:
+            return render_template('index.html', lang=lang, languages=a.langs, mode='sentence')
     return render_template('index.html', languages=a.langs)
 
 
 @app.route('/<lang>/analyze')
-def add_lemma(lang):
+def analyze_input(lang):
     if lang not in a.langs:
         return jsonify({'message': 'Wrong language.'})
     query = copy_request_args()
@@ -44,9 +48,13 @@ def add_lemma(lang):
     with open('query_log.txt', 'a', encoding='utf-8') as fLog:
         fLog.write(datetime.now().isoformat(timespec='seconds') + '\t' + lang + '\n')
         fLog.write(json.dumps(query, ensure_ascii=False, indent=2) + '\n\n')
-    analysis = a.analyze(lang, query['sentence'])
-    analysisHTML = render_template('analysis.html', words=analysis)
-    return jsonify({'message': 'OK', 'analysis': analysisHTML})
+    if query['mode'] == 'sentence':
+        analysis = a.analyze(lang, query['sentence'])
+        analysisHTML = render_template('analysis.html', words=analysis)
+        return jsonify({'message': 'OK', 'analysis': analysisHTML})
+    else:
+        textHTML = pp.analyze(lang, query['sentence'])
+        return jsonify({'message': 'OK', 'analysis': textHTML})
 
 
 if __name__ == "__main__":

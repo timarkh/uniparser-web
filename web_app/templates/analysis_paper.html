@@ -1,0 +1,25 @@
+<table class="example">
+<tr>
+{% if num %}
+<td>({{ num }})</td>
+{% endif %}
+{% for w in words %}
+	<td><i>{{ w }}</i></td>
+{% endfor %}
+</tr>
+<tr>
+{% if num %}
+<td></td>
+{% endif %}
+{% for g in glosses %}
+	<td>{{ g }}</td>
+{% endfor %}
+</tr>
+<tr>
+{% if num %}
+<td></td>
+{% endif %}
+<td colspan="{{ words|length }}">{{ translation }}</td>
+</tr>
+</table>
+

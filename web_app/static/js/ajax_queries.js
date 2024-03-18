@@ -11,7 +11,7 @@ function analyze() {
 	$('#analyze').toggleClass('btn-primary');
 	$.ajax({
 		url: curLang + "/analyze",
-		data: $("#sentence").serialize(),
+		data: {"sentence": $("#sentence").val(), "mode": mode},
 		type: "GET",
 		success: process_response,
 		error: function(errorThrown) {
