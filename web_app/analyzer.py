@@ -18,7 +18,7 @@ from uniparser_udmurt import UdmurtAnalyzer
 from uniparser_urmi import UrmiAnalyzer
 
 from .translit_armenian import armenian_translit_meillet
-from .translit_beserman import beserman_translit_cyrillic, beserman_translit_upa
+from .translit_beserman import beserman_translit_cyrillic, beserman_translit_upa, beserman_translit_ipa
 from .translit_erzya import erzya_translit_upa
 from .translit_udmurt import udmurt_translit_upa
 
@@ -40,7 +40,7 @@ class Analyzer:
                 'analyzer': BesermanLatAnalyzer(),
                 'translit': {
                     'UPA': beserman_translit_upa,
-                    'IPA': beserman_translit_upa,
+                    'IPA': beserman_translit_ipa,
                     'Cyrillic': beserman_translit_cyrillic
                 }
             },
@@ -132,8 +132,9 @@ class PaperParser:
                             flags=re.DOTALL)
     rxStemGloss = re.compile('[ ,;:()]+')
     rxWordLang = {
-        'beserman': re.compile('(?<= )-[\\w()]*[əɤʼčšžǯɨ][\\w()-]*|'
-                               '\\w*[əɤʼčšžǯɨ]\\w*|'
+        'beserman': re.compile('(?<= )-[\\w(́)]*[əɤʼčšžǯɨ́][\\ẃ()-]*|'
+                               '[\\ẃ]*[əɤʼčšžǯɨ́][\\ẃ]*|'
+                               '(?<= )-[\\w-]+-(?= )|'
                                '\\b(ta|[mt]on|ben|uk|mare?|(ta|so)os(len)?|nu|soje|'
                                'pe|val|palaz|u[gmzd]|na|tak|odig|se?re|ma|ik|mh|vot|tare|'
                                'ke|ja|bere|pun[eoi]?[mdz]?|gine|(so|ta)iz[^ \r\n]*|gord|marke|'
@@ -141,6 +142,9 @@ class PaperParser:
                                'pi|dore|vaj[eo]?|med|da|wa|olo|abi(len)?|jun|'
                                'korka[^ \r\n]*|aslam|poti[zdm]?|kule|lue|murt[^ \r\n]*)\\b',
                                flags=re.DOTALL)
+    }
+    rxEnlitics = {
+        'beserman': re.compile('^(uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|a)$', flags=re.I)
     }
 
     def __init__(self, analyzer):
@@ -193,8 +197,10 @@ class PaperParser:
                 curGlosses.add(ana['gloss'])
                 if 'trans_ru' in ana:
                     curTrans.add(ana['trans_ru'])
-            curGlosses = [g for g in sorted(curGlosses, key=lambda x: (x.count('-'), x))]
-            curWfParts = [p for p in sorted(curWfParts, key=lambda x: (x.count('-'), x))]
+            curGlosses = [g for g in sorted(curGlosses, key=lambda x: (x.count('-'), len(x), x))
+                          if len(g) > 0]
+            curWfParts = [p for p in sorted(curWfParts, key=lambda x: (x.count('-'), max(len(p) for p in x.split('-')), x))
+                          if len(p) > 0]
             curTrans = [t for t in sorted(curTrans, key=lambda x: (-len(x), x))]
             if len(curGlosses) > 0 and len(curWfParts) > 0:
                 wf = hangingPuncL + curWfParts[0]
@@ -202,8 +208,16 @@ class PaperParser:
                 if len(curTrans) > 0:
                     gloss = gloss.replace('STEM', self.rxStemGloss.sub('.', curTrans[0]))
             hangingPuncL = ''
-            words.append(wf)
-            glosses.append(gloss)
+            if (lang in self.rxEnlitics
+                    and self.rxEnlitics[lang].search(wf) is not None
+                    and len(words) > 0
+                    and len(words[-1]) > 0
+                    and self.rxPuncR.search(words[-1][-1]) is None):
+                words[-1] += '=' + wf
+                glosses[-1] += '=' + gloss
+            else:
+                words.append(wf)
+                glosses.append(gloss)
         return self.render_jinja_html('web_app/templates',
                                       'analysis_paper.html',
                                       num=num,
