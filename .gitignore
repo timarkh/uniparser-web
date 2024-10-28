@@ -6,3 +6,4 @@ new_lexemes_*.txt
 new_lexrules.txt
 query_log.txt
 errors.log
+docx/*

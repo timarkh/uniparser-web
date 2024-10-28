@@ -126,6 +126,11 @@ td {
 	border-radius: 2px;
 }
 
+.example table {
+	margin-bottom: 25px;
+	margin-top: 25px;
+}
+
 .example td {
 	padding: 0px 6px;
 	vertical-align: middle;

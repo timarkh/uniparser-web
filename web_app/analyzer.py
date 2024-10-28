@@ -3,6 +3,10 @@ import os
 import copy
 import jinja2
 from flask import render_template
+from docx import Document
+from docx.shared import Inches, Cm, Pt
+from docx.oxml.shared import OxmlElement, qn
+from docx.enum.style import WD_STYLE_TYPE
 
 from uniparser_albanian import AlbanianAnalyzer
 from uniparser_beserman_lat import BesermanLatAnalyzer
@@ -31,10 +35,10 @@ class Analyzer:
 
     def __init__(self):
         self.langs = {
-            'albanian': {
-                'name': 'Albanian',
-                'analyzer': AlbanianAnalyzer()
-            },
+            # 'albanian': {
+            #     'name': 'Albanian',
+            #     'analyzer': AlbanianAnalyzer()
+            # },
             'beserman': {
                 'name': 'Beserman (Latin-based)',
                 'analyzer': BesermanLatAnalyzer(),
@@ -43,56 +47,56 @@ class Analyzer:
                     'IPA': beserman_translit_ipa,
                     'Cyrillic': beserman_translit_cyrillic
                 }
-            },
-            'buryat': {
-                'name': 'Buryat',
-                'analyzer': BuryatAnalyzer()
-            },
-            'eastern_armenian': {
-                'name': 'Eastern Armenian',
-                'analyzer': EasternArmenianAnalyzer(),
-                'translit': {
-                    'Quasi-Meillet': armenian_translit_meillet
-                }
-            },
-            'erzya': {
-                'name': 'Erzya',
-                'analyzer': ErzyaAnalyzer(),
-                'translit': {
-                    'UPA': erzya_translit_upa
-                }
-            },
-            'komi_zyrian': {
-                'name': 'Komi Zyrian',
-                'analyzer': KomiZyrianAnalyzer()
-            },
-            'meadow_mari': {
-                'name': 'Meadow Mari',
-                'analyzer': MeadowMariAnalyzer()
-            },
-            'moksha': {
-                'name': 'Moksha',
-                'analyzer': MokshaAnalyzer()
-            },
-            'ossetic': {
-                'name': 'Ossetic (Iron)',
-                'analyzer': OsseticAnalyzer()
-            },
-            'turoyo': {
-                'name': 'Ṭuroyo',
-                'analyzer': TuroyoAnalyzer()
-            },
-            'udmurt': {
-                'name': 'Udmurt',
-                'analyzer': UdmurtAnalyzer(),
-                'translit': {
-                    'UPA': udmurt_translit_upa
-                }
-            },
-            'urmi': {
-                'name': 'Christian Urmi (Assyrian Neo-Aramaic), Latin-based',
-                'analyzer': UrmiAnalyzer()
             }
+            # 'buryat': {
+            #     'name': 'Buryat',
+            #     'analyzer': BuryatAnalyzer()
+            # },
+            # 'eastern_armenian': {
+            #     'name': 'Eastern Armenian',
+            #     'analyzer': EasternArmenianAnalyzer(),
+            #     'translit': {
+            #         'Quasi-Meillet': armenian_translit_meillet
+            #     }
+            # },
+            # 'erzya': {
+            #     'name': 'Erzya',
+            #     'analyzer': ErzyaAnalyzer(),
+            #     'translit': {
+            #         'UPA': erzya_translit_upa
+            #     }
+            # },
+            # 'komi_zyrian': {
+            #     'name': 'Komi Zyrian',
+            #     'analyzer': KomiZyrianAnalyzer()
+            # },
+            # 'meadow_mari': {
+            #     'name': 'Meadow Mari',
+            #     'analyzer': MeadowMariAnalyzer()
+            # },
+            # 'moksha': {
+            #     'name': 'Moksha',
+            #     'analyzer': MokshaAnalyzer()
+            # },
+            # 'ossetic': {
+            #     'name': 'Ossetic (Iron)',
+            #     'analyzer': OsseticAnalyzer()
+            # },
+            # 'turoyo': {
+            #     'name': 'Ṭuroyo',
+            #     'analyzer': TuroyoAnalyzer()
+            # },
+            # 'udmurt': {
+            #     'name': 'Udmurt',
+            #     'analyzer': UdmurtAnalyzer(),
+            #     'translit': {
+            #         'UPA': udmurt_translit_upa
+            #     }
+            # },
+            # 'urmi': {
+            #     'name': 'Christian Urmi (Assyrian Neo-Aramaic), Latin-based',
+            #     'analyzer': UrmiAnalyzer()
+            # }
         }
         self.disamb_langs = ['albanian', 'udmurt', 'beserman', 'eastern_armenian']
 
@@ -146,6 +150,39 @@ class PaperParser:
     rxEnlitics = {
         'beserman': re.compile('^(uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|a)$', flags=re.I)
     }
+    rxGlosses = re.compile('\\b(PRS|PTS(?:\\.EVID)?|PST|FUT|(?:ACC\\.)?[123](?:SG|PL)(?:\\.POSS)?|'
+                           'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|REP|LOC|LAT|EL|PL|SG)\\b', flags=re.DOTALL|re.I)
+    rxGlossesNonGlosses = re.compile('([^$]+)')
+
+    @staticmethod
+    def set_cell_margins(table, left=0, right=0):
+        tc = table._element
+        tblPr = tc.tblPr
+        tblCellMar = OxmlElement('w:tblCellMar')
+        kwargs = {"left": left, "right": right}
+        for m in ["left", "right"]:
+            node = OxmlElement("w:{}".format(m))
+            node.set(qn('w:w'), str(kwargs.get(m)))
+            node.set(qn('w:type'), 'dxa')
+            tblCellMar.append(node)
+
+        tblPr.append(tblCellMar)
+
+    @staticmethod
+    def p_no_margins(wordDoc, p, style='Normal'):
+        p.style = wordDoc.styles[style]
+        p.paragraph_format.first_line_indent = Cm(0)
+        p.paragraph_format.space_before = Cm(0)
+        p.paragraph_format.space_after = Cm(0)
+
+    @staticmethod
+    def smallcaps_glosses(p, text):
+        text = PaperParser.rxGlosses.sub(lambda m: '$' + m.group(1).lower() + '$', text)
+        for run in PaperParser.rxGlossesNonGlosses.findall(text):
+            if PaperParser.rxGlosses.search(run) is not None:
+                p.add_run(run).font.small_caps = True
+            else:
+                p.add_run(run)
 
     def __init__(self, analyzer):
         self.analyzer = analyzer
@@ -165,7 +202,7 @@ class PaperParser:
             self.templates[(templateDir, templateFilename)] = template
         return template.render(context)
 
-    def process_example(self, lang, num, text, trans):
+    def process_example(self, lang, num, text, trans, wordDoc=None):
         result = self.analyzer.analyze(lang, text)
         if 'IPA' in result:
             result = result['IPA']
@@ -218,6 +255,33 @@ class PaperParser:
             else:
                 words.append(wf)
                 glosses.append(gloss)
+
+        if wordDoc is not None:
+            table = wordDoc.add_table(rows=3, cols=len(words)+1)
+            p = table.cell(0, 0).paragraphs[0]
+            p.text = '(' + str(num) + ')'
+            PaperParser.p_no_margins(wordDoc, p)
+            p = table.cell(1, 0).paragraphs[0]
+            PaperParser.p_no_margins(wordDoc, p)
+            for iCell in range(len(words)):
+                if iCell >= len(glosses):
+                    break
+                p = table.cell(0, iCell+1).paragraphs[0]
+                p.text = words[iCell].strip()
+                PaperParser.p_no_margins(wordDoc, p)
+                p = table.cell(1, iCell+1).paragraphs[0]
+                p.style = wordDoc.styles['Gloss']
+                PaperParser.p_no_margins(wordDoc, p, 'Gloss')
+                if re.search('^(?:[ /*?!.,()_-]*|\\[S[0-9]+\\]:?)$', words[iCell].strip()) is not None:
+                    continue
+                PaperParser.smallcaps_glosses(p, glosses[iCell].strip())
+                table.cell(2, 0).merge(table.cell(2, iCell+1))
+            p = table.cell(2, 0).paragraphs[0]
+            p.text = trans
+            PaperParser.p_no_margins(wordDoc, p)
+            self.set_cell_margins(table, 0, 0)
+            table.autofit = True
+
         return self.render_jinja_html('web_app/templates',
                                       'analysis_paper.html',
                                       num=num,
@@ -231,6 +295,14 @@ class PaperParser:
         text = '\n' + text.strip() + '\n'
         segments = self.rxExamples.findall(text)
         textProcessed = ''
+        wordDoc = Document()
+        glossStyle = wordDoc.styles.add_style('Gloss', WD_STYLE_TYPE.PARAGRAPH)
+        normalStyle = wordDoc.styles['Normal']
+        normalStyle.font.name = 'Brill'
+        normalStyle.font.size = Pt(10)
+        glossStyle.font.name = 'Brill'
+        glossStyle.font.size = Pt(9)
+        prevTitle = True
         for seg in segments:
             if len(seg[1]) == 0 and len(seg[3]) == 0:
                 textProcessed += '<br>'
@@ -243,8 +315,35 @@ class PaperParser:
                         transliterator = lambda s: s
                     para = self.rxWordLang[lang].sub(lambda m: '<i>' + transliterator(m.group(0)) + '</i>', para)
                 textProcessed += '<p>' + para.replace('\n', '</p>\n<p>')[:-3]
+                paraRuns = re.findall('<i>.+?</i>|(?:[^<]|<[^i])+', para.strip('\r\n'))
+                if len(paraRuns) > 1 or (len(paraRuns) == 1
+                                         and re.search('^(?:[ \r\n]*|<i> *</i>[ \r\n]*)$',
+                                                       paraRuns[0], flags=re.DOTALL) is None):
+                    p = wordDoc.add_paragraph('')
+                    p.style = wordDoc.styles['Normal']
+                    if not prevTitle:
+                        p.paragraph_format.first_line_indent = Cm(1)
+                    p.paragraph_format.space_before = Cm(0)
+                    p.paragraph_format.space_after = Cm(0)
+                    if len(paraRuns) == 1 and re.search('^[^<>]{0,65}[^.?!:;)<> -] *$', paraRuns[0]) is not None:
+                        p.add_run('XX.X ' + paraRuns[0]).bold = True
+                        p.paragraph_format.space_before = Pt(12)
+                        p.paragraph_format.first_line_indent = Cm(0)
+                        prevTitle = True
+                    else:
+                        prevTitle = False
+                        for paraRun in paraRuns:
+                            if paraRun.startswith('<i>'):
+                                p.add_run(paraRun[3:len(paraRun)-4]).italic = True
+                            else:
+                                PaperParser.smallcaps_glosses(p, paraRun)
             else:
                 print(seg)
-                textProcessed += self.process_example(lang, seg[0], seg[1], seg[2])
+                textProcessed += self.process_example(lang, seg[0], seg[1], seg[2], wordDoc)
+                p = wordDoc.add_paragraph('')
+                PaperParser.p_no_margins(wordDoc, p)
+        if not os.path.exists('docx'):
+            os.makedirs('docx')
+        wordDoc.save('docx/processed.docx')
         return textProcessed
 
