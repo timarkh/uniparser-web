@@ -131,28 +131,61 @@ class Analyzer:
 class PaperParser:
     rxPuncR = re.compile('^[.,?!:;)"/-]+$')
     rxPuncL = re.compile('^[*(]+$')
+    rxSingleQuoteL = re.compile('(?<=[ \t\r\n(\\[])\'', flags=re.DOTALL)
+    rxSingleQuoteR = re.compile('(?<=[\\w.,?!:;)\\]])\'', flags=re.DOTALL)
+    rxDoubleQuoteL = re.compile('(?<=[ \t\r\n(\\[])"', flags=re.DOTALL)
+    rxDoubleQuoteR = re.compile('(?<=[\\w.,?!:;)\\]])"', flags=re.DOTALL)
+    rxFigureDash = re.compile('(?<=[0-9]) ?- ?(?=[0-9])')
+    rxEmDash = re.compile('(?<=[^0-9 ]) - (?=[^0-9 ])')
     rxExamples = re.compile('(?<=\n) *\\((x[x0-9]+?)\\)[ \t]*([^\r\n]+?)[ \t]*\n'
                             '(?: *([^ \r\n][^\r\n]*?) *\n)?|(?<=\n)([^\n]*\n)',
                             flags=re.DOTALL)
     rxStemGloss = re.compile('[ ,;:()]+')
     rxWordLang = {
-        'beserman': re.compile('(?<= )-[\\w(́)]*[əɤʼčšžǯɨ́][\\ẃ()-]*|'
-                               '[\\ẃ]*[əɤʼčšžǯɨ́][\\ẃ]*|'
+        'beserman': re.compile('(?<= )-[\\w(́)]*[əɤʼčšžǯɨ́ʉ̯ʌɘʲ͡ɕʂʐʑˌа-яёӵӝӟӥӧʙ̥ʔ̩̥ː][\\ẃ()-]*|'
+                               '[\\ẃ]*[əɤʼčšžǯɨ́ʉ̯ʌɘʲ͡ɕʂʐʑˌа-яёӵӝӟӥӧʙ̥ʔ̩̥ː][\\ẃ]*|'
                                '(?<= )-[\\w-]+-(?= )|'
-                               '\\b(ta|[mt]on|ben|uk|mare?|(ta|so)os(len)?|nu|soje|'
+                               '\\b(ta|[mt]on|ben|uk|mare?|(ta|so)os(len)?|nu|(ta|so)je|'
                                'pe|val|palaz|u[gmzd]|na|tak|odig|se?re|ma|ik|mh|vot|tare|'
                                'ke|ja|bere|pun[eoi]?[mdz]?|gine|(so|ta)iz[^ \r\n]*|gord|marke|'
-                               'e[jzmd]|(ta|so)len|(ta|so)in|tros|bur|luoz|naverno|'
-                               'pi|dore|vaj[eo]?|med|da|wa|olo|abi(len)?|jun|'
+                               'e[jzmd]|(ta|so)len|(ta|so)(in|len|tek)|tros|bur|luoz|naverno|'
+                               'pi|dore|vaj[eo]?|med|da|wa|olo|abi(len)?|jun|\\w+jos(len)?|\\wjez(len)?|'
                                'korka[^ \r\n]*|aslam|poti[zdm]?|kule|lue|murt[^ \r\n]*)\\b',
                                flags=re.DOTALL)
     }
     rxEnlitics = {
-        'beserman': re.compile('^(uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|a)$', flags=re.I)
+        'beserman': re.compile('^([gk][iʌ]ne|uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|a)$', flags=re.I)
     }
-    rxGlosses = re.compile('\\b(PRS|PTS(?:\\.EVID)?|PST|FUT|(?:ACC\\.)?[123](?:SG|PL)(?:\\.POSS)?|'
-                           'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|REP|LOC|LAT|EL|PL|SG)\\b', flags=re.DOTALL|re.I)
+    rxGlosses = {
+        'beserman': re.compile('\\b(IDEO|REP|AUTOREP|ENIM|(?<![‘\'])ID(?!=\\.)|'
+                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|'
+                               'PRS|PST(?:\\.EVID(?:\\.NEG(?:\\.[123]+)?(?:\\.?(?:SG|PL))?)?)?|'
+                               'FUT|(?:ACC\\.)?[123](?:SG|PL)(?:\\.POSS)?|NOT\\.EXIST|'
+                               'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|CAR|ADV|'
+                               'LOC|LAT|EL|PROL|EGR|TERM|APP|RCS|DMS|OPT(?:\\.[123])?|'
+                               'NEG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
+                               'CNG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
+                               'COND|COMP|PROP|ATTR|MULT|INF(?:\\.CESS)?|RES|DEB|'
+                               'NMLZ|PTCP(?:\\.(?:ACT|NEG|PST|HAB|DEB))?(?:\\.NEG)?|'
+                               'ORD|ADVLOC|EXHST|(?<![ ‘\'(])PERIOD|DELIM|APPRNUM|RUS|'
+                               'EXCL|INCL|(?<![ ‘\'(])ADD|CONTR|'
+                               'CVB(?:\\.(?:NEG|SIM[1-5]?|LIM))?|PL(?:\\.ADJ)?|SG)\\b',
+                               flags=re.DOTALL|re.I)
+    }
     rxGlossesNonGlosses = re.compile('([^$]+)')
+
+    @staticmethod
+    def clean_punc(text):
+        """
+        Replace quotation marks and whatnot.
+        """
+        text = PaperParser.rxSingleQuoteL.sub('‘', text)
+        text = PaperParser.rxSingleQuoteR.sub('’', text)
+        text = PaperParser.rxDoubleQuoteL.sub('“', text)
+        text = PaperParser.rxDoubleQuoteR.sub('”', text)
+        text = PaperParser.rxFigureDash.sub('–', text)
+        text = PaperParser.rxEmDash.sub('—', text)
+        return text
 
     @staticmethod
     def set_cell_margins(table, left=0, right=0):
@@ -176,13 +209,16 @@ class PaperParser:
         p.paragraph_format.space_after = Cm(0)
 
     @staticmethod
-    def smallcaps_glosses(p, text):
-        text = PaperParser.rxGlosses.sub(lambda m: '$' + m.group(1).lower() + '$', text)
-        for run in PaperParser.rxGlossesNonGlosses.findall(text):
-            if PaperParser.rxGlosses.search(run) is not None:
-                p.add_run(run).font.small_caps = True
-            else:
-                p.add_run(run)
+    def smallcaps_glosses(p, text, lang):
+        if lang in PaperParser.rxGlosses:
+            text = PaperParser.rxGlosses[lang].sub(lambda m: '$' + m.group(1).lower() + '$', text)
+            for run in PaperParser.rxGlossesNonGlosses.findall(text):
+                if PaperParser.rxGlosses[lang].search(run) is not None:
+                    p.add_run(run).font.small_caps = True
+                else:
+                    p.add_run(run)
+        else:
+            p.text = text
 
     def __init__(self, analyzer):
         self.analyzer = analyzer
@@ -267,19 +303,20 @@ class PaperParser:
                 if iCell >= len(glosses):
                     break
                 p = table.cell(0, iCell+1).paragraphs[0]
-                p.text = words[iCell].strip()
+                p.add_run(words[iCell].strip()).italic = True
                 PaperParser.p_no_margins(wordDoc, p)
                 p = table.cell(1, iCell+1).paragraphs[0]
                 p.style = wordDoc.styles['Gloss']
                 PaperParser.p_no_margins(wordDoc, p, 'Gloss')
                 if re.search('^(?:[ /*?!.,()_-]*|\\[S[0-9]+\\]:?)$', words[iCell].strip()) is not None:
                     continue
-                PaperParser.smallcaps_glosses(p, glosses[iCell].strip())
-                table.cell(2, 0).merge(table.cell(2, iCell+1))
-            p = table.cell(2, 0).paragraphs[0]
+                PaperParser.smallcaps_glosses(p, glosses[iCell].strip(), lang)
+                if iCell > 1:
+                    table.cell(2, 1).merge(table.cell(2, iCell+1))
+            p = table.cell(2, 1).paragraphs[0]
             p.text = trans
             PaperParser.p_no_margins(wordDoc, p)
-            self.set_cell_margins(table, 0, 0)
+            # self.set_cell_margins(table, 0, 0)
             table.autofit = True
 
         return self.render_jinja_html('web_app/templates',
@@ -293,16 +330,21 @@ class PaperParser:
         if lang not in self.analyzer.langs:
             return text
         text = '\n' + text.strip() + '\n'
+        text = PaperParser.clean_punc(text)
         segments = self.rxExamples.findall(text)
         textProcessed = ''
         wordDoc = Document()
         glossStyle = wordDoc.styles.add_style('Gloss', WD_STYLE_TYPE.PARAGRAPH)
+        headerStyle = wordDoc.styles.add_style('Section header', WD_STYLE_TYPE.PARAGRAPH)
         normalStyle = wordDoc.styles['Normal']
         normalStyle.font.name = 'Brill'
         normalStyle.font.size = Pt(10)
         glossStyle.font.name = 'Brill'
         glossStyle.font.size = Pt(9)
+        headerStyle.font.name = 'Brill'
+        headerStyle.font.size = Pt(10)
         prevTitle = True
+        prevExample = False
         for seg in segments:
             if len(seg[1]) == 0 and len(seg[3]) == 0:
                 textProcessed += '<br>'
@@ -321,12 +363,14 @@ class PaperParser:
                                                        paraRuns[0], flags=re.DOTALL) is None):
                     p = wordDoc.add_paragraph('')
                     p.style = wordDoc.styles['Normal']
+                    prevExample = False
                     if not prevTitle:
                         p.paragraph_format.first_line_indent = Cm(1)
                     p.paragraph_format.space_before = Cm(0)
                     p.paragraph_format.space_after = Cm(0)
                     if len(paraRuns) == 1 and re.search('^[^<>]{0,65}[^.?!:;)<> -] *$', paraRuns[0]) is not None:
                         p.add_run('XX.X ' + paraRuns[0]).bold = True
+                        p.style = wordDoc.styles['Section header']
                         p.paragraph_format.space_before = Pt(12)
                         p.paragraph_format.first_line_indent = Cm(0)
                         prevTitle = True
@@ -336,9 +380,13 @@ class PaperParser:
                             if paraRun.startswith('<i>'):
                                 p.add_run(paraRun[3:len(paraRun)-4]).italic = True
                             else:
-                                PaperParser.smallcaps_glosses(p, paraRun)
+                                PaperParser.smallcaps_glosses(p, paraRun, lang)
             else:
                 print(seg)
+                if not prevExample:
+                    p = wordDoc.add_paragraph('')
+                    PaperParser.p_no_margins(wordDoc, p)
+                prevExample = True
                 textProcessed += self.process_example(lang, seg[0], seg[1], seg[2], wordDoc)
                 p = wordDoc.add_paragraph('')
                 PaperParser.p_no_margins(wordDoc, p)
