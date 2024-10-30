@@ -12,13 +12,13 @@ pp = PaperParser(a)
 
 def copy_request_args():
     """
-    Copy the reauest arguments from request.args to a
+    Copy the reauest arguments from request.data to a
     normal modifiable dictionary. Return the dictionary.
     """
     query = {}
-    if request.args is None or len(request.args) <= 0:
+    if request.form is None or len(request.form) <= 0:
         return query
-    for field, value in request.args.items():
+    for field, value in request.form.items():
         query[field] = copy.deepcopy(value)
     return query
 
@@ -38,7 +38,7 @@ def index_lang(lang):
     return render_template('index.html', languages=a.langs)
 
 
-@app.route('/<lang>/analyze')
+@app.route('/<lang>/analyze', methods=['POST'])
 def analyze_input(lang):
     if lang not in a.langs:
         return jsonify({'message': 'Wrong language.'})

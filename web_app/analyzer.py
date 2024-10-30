@@ -158,10 +158,10 @@ class PaperParser:
     }
     rxGlosses = {
         'beserman': re.compile('\\b(IDEO|REP|AUTOREP|ENIM|(?<![‘\'])ID(?!=\\.)|'
-                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|'
+                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|COMPL|'
                                'PRS|PST(?:\\.EVID(?:\\.NEG(?:\\.[123]+)?(?:\\.?(?:SG|PL))?)?)?|'
                                'FUT|(?:ACC\\.)?[123](?:SG|PL)(?:\\.POSS)?|NOT\\.EXIST|'
-                               'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|CAR|ADV|'
+                               'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|(?<![ ‘\'])CAR|ADV|'
                                'LOC|LAT|EL|PROL|EGR|TERM|APP|RCS|DMS|OPT(?:\\.[123])?|'
                                'NEG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
                                'CNG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
@@ -299,9 +299,13 @@ class PaperParser:
             PaperParser.p_no_margins(wordDoc, p)
             p = table.cell(1, 0).paragraphs[0]
             PaperParser.p_no_margins(wordDoc, p)
+            p = table.cell(2, 0).paragraphs[0]
+            PaperParser.p_no_margins(wordDoc, p)
             for iCell in range(len(words)):
                 if iCell >= len(glosses):
                     break
+                if iCell >= 1:
+                    table.cell(2, 1).merge(table.cell(2, iCell+1))
                 p = table.cell(0, iCell+1).paragraphs[0]
                 p.add_run(words[iCell].strip()).italic = True
                 PaperParser.p_no_margins(wordDoc, p)
@@ -311,8 +315,6 @@ class PaperParser:
                 if re.search('^(?:[ /*?!.,()_-]*|\\[S[0-9]+\\]:?)$', words[iCell].strip()) is not None:
                     continue
                 PaperParser.smallcaps_glosses(p, glosses[iCell].strip(), lang)
-                if iCell > 1:
-                    table.cell(2, 1).merge(table.cell(2, iCell+1))
             p = table.cell(2, 1).paragraphs[0]
             p.text = trans
             PaperParser.p_no_margins(wordDoc, p)
@@ -339,6 +341,7 @@ class PaperParser:
         normalStyle = wordDoc.styles['Normal']
         normalStyle.font.name = 'Brill'
         normalStyle.font.size = Pt(10)
+        normalStyle.paragraph_format.space_after = Cm(0)
         glossStyle.font.name = 'Brill'
         glossStyle.font.size = Pt(9)
         headerStyle.font.name = 'Brill'

@@ -12,7 +12,7 @@ function analyze() {
 	$.ajax({
 		url: curLang + "/analyze",
 		data: {"sentence": $("#sentence").val(), "mode": mode},
-		type: "GET",
+		type: "POST",
 		success: process_response,
 		error: function(errorThrown) {
 			alert(JSON.stringify(errorThrown));
