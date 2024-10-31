@@ -1,6 +1,7 @@
 import re
 import os
 import copy
+import math
 import jinja2
 from flask import render_template
 from docx import Document
@@ -129,8 +130,8 @@ class Analyzer:
 
 
 class PaperParser:
-    rxPuncR = re.compile('^[.,?!:;)"/-]+$')
-    rxPuncL = re.compile('^[*(]+$')
+    rxPuncR = re.compile('^[.,?!:;)"/\\-\\]]+$')
+    rxPuncL = re.compile('^[#*(\\[]+$')
     rxSingleQuoteL = re.compile('(?<=[ \t\r\n(\\[])\'', flags=re.DOTALL)
     rxSingleQuoteR = re.compile('(?<=[\\w.,?!:;)\\]])\'', flags=re.DOTALL)
     rxDoubleQuoteL = re.compile('(?<=[ \t\r\n(\\[])"', flags=re.DOTALL)
@@ -143,10 +144,11 @@ class PaperParser:
     rxStemGloss = re.compile('[ ,;:()]+')
     rxWordLang = {
         'beserman': re.compile('(?<= )-[\\w(́)]*[əɤʼčšžǯɨ́ʉ̯ʌɘʲ͡ɕʂʐʑˌа-яёӵӝӟӥӧʙ̥ʔ̩̥ː][\\ẃ()-]*|'
-                               '[\\ẃ]*[əɤʼčšžǯɨ́ʉ̯ʌɘʲ͡ɕʂʐʑˌа-яёӵӝӟӥӧʙ̥ʔ̩̥ː][\\ẃ]*|'
-                               '(?<= )-[\\w-]+-(?= )|'
+                               '[-\\ẃ]*[əɤʼčšžǯɨ́ʉ̯ʌɘʲ͡ɕʂʐʑˌа-яёӵӝӟӥӧʙ̥ʔ̩̥ː][-\\ẃ]*|'
+                               '(?<= )-[\\w()-]+-(?= )|(?<= )-[\\w()-]+\\b|'
                                '\\b(ta|[mt]on|ben|uk|mare?|(ta|so)os(len)?|nu|(ta|so)je|'
-                               'pe|val|palaz|u[gmzd]|na|tak|odig|se?re|ma|ik|mh|vot|tare|'
+                               'das|og|og-og[^ \r\n]*|kud|kudi[^ \r\n]*|perv[oi]j[^ \r\n]*|'
+                               'pe|val|palaz|u[gmzd]|na|tak|odig[^ \r\n]*|se?re|ma|ik|mh|vot|tare|'
                                'ke|ja|bere|pun[eoi]?[mdz]?|gine|(so|ta)iz[^ \r\n]*|gord|marke|'
                                'e[jzmd]|(ta|so)len|(ta|so)(in|len|tek)|tros|bur|luoz|naverno|'
                                'pi|dore|vaj[eo]?|med|da|wa|olo|abi(len)?|jun|\\w+jos(len)?|\\wjez(len)?|'
@@ -158,7 +160,7 @@ class PaperParser:
     }
     rxGlosses = {
         'beserman': re.compile('\\b(IDEO|REP|AUTOREP|ENIM|(?<![‘\'])ID(?!=\\.)|'
-                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|COMPL|'
+                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|COMPL|EXIST|'
                                'PRS|PST(?:\\.EVID(?:\\.NEG(?:\\.[123]+)?(?:\\.?(?:SG|PL))?)?)?|'
                                'FUT|(?:ACC\\.)?[123](?:SG|PL)(?:\\.POSS)?|NOT\\.EXIST|'
                                'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|(?<![ ‘\'])CAR|ADV|'
@@ -167,7 +169,7 @@ class PaperParser:
                                'CNG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
                                'COND|COMP|PROP|ATTR|MULT|INF(?:\\.CESS)?|RES|DEB|'
                                'NMLZ|PTCP(?:\\.(?:ACT|NEG|PST|HAB|DEB))?(?:\\.NEG)?|'
-                               'ORD|ADVLOC|EXHST|(?<![ ‘\'(])PERIOD|DELIM|APPRNUM|RUS|'
+                               'ORD|ADVLOC|ADVTEMP|EXHST|(?<![ ‘\'(])PERIOD|DELIM|APPRNUM|RUS|'
                                'EXCL|INCL|(?<![ ‘\'(])ADD|CONTR|'
                                'CVB(?:\\.(?:NEG|SIM[1-5]?|LIM))?|PL(?:\\.ADJ)?|SG)\\b',
                                flags=re.DOTALL|re.I)
@@ -293,29 +295,37 @@ class PaperParser:
                 glosses.append(gloss)
 
         if wordDoc is not None:
-            table = wordDoc.add_table(rows=3, cols=len(words)+1)
+            nCharsWords = len(''.join(w.strip() for w in words))
+            nCharsGloss = len(''.join(re.sub('[а-яё][а-яё ,.\\-()]+',
+                                             'XXXXXX', g.strip()) for g in glosses))
+            nRows = max(nCharsWords // 56, nCharsGloss // 76) + 1
+            nCols = 1 + math.ceil(len(words) / nRows)
+            table = wordDoc.add_table(rows=nRows * 2 + 1, cols=nCols)
             p = table.cell(0, 0).paragraphs[0]
             p.text = '(' + str(num) + ')'
             PaperParser.p_no_margins(wordDoc, p)
-            p = table.cell(1, 0).paragraphs[0]
-            PaperParser.p_no_margins(wordDoc, p)
-            p = table.cell(2, 0).paragraphs[0]
-            PaperParser.p_no_margins(wordDoc, p)
+            for iRow in range(nRows):
+                p = table.cell(iRow + 1, 0).paragraphs[0]
+                PaperParser.p_no_margins(wordDoc, p)
+                p = table.cell(iRow + 2, 0).paragraphs[0]
+                PaperParser.p_no_margins(wordDoc, p)
             for iCell in range(len(words)):
                 if iCell >= len(glosses):
                     break
+                iRow = iCell // (nCols - 1)
+                iCol = iCell - iRow * (nCols - 1) + 1
                 if iCell >= 1:
-                    table.cell(2, 1).merge(table.cell(2, iCell+1))
-                p = table.cell(0, iCell+1).paragraphs[0]
+                    table.cell(nRows * 2, 1).merge(table.cell(nRows * 2, iCol))
+                p = table.cell(iRow * 2, iCol).paragraphs[0]
                 p.add_run(words[iCell].strip()).italic = True
                 PaperParser.p_no_margins(wordDoc, p)
-                p = table.cell(1, iCell+1).paragraphs[0]
+                p = table.cell(iRow * 2 + 1, iCol).paragraphs[0]
                 p.style = wordDoc.styles['Gloss']
                 PaperParser.p_no_margins(wordDoc, p, 'Gloss')
                 if re.search('^(?:[ /*?!.,()_-]*|\\[S[0-9]+\\]:?)$', words[iCell].strip()) is not None:
                     continue
                 PaperParser.smallcaps_glosses(p, glosses[iCell].strip(), lang)
-            p = table.cell(2, 1).paragraphs[0]
+            p = table.cell(nRows * 2, 1).paragraphs[0]
             p.text = trans
             PaperParser.p_no_margins(wordDoc, p)
             # self.set_cell_margins(table, 0, 0)
