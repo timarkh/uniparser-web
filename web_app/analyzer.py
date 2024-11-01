@@ -130,8 +130,8 @@ class Analyzer:
 
 
 class PaperParser:
-    rxPuncR = re.compile('^[.,?!:;)"/\\-\\]]+$')
-    rxPuncL = re.compile('^[#*(\\[]+$')
+    rxPuncR = re.compile('^[.,?!:;)"/\\-\\]”]+$')
+    rxPuncL = re.compile('^[#*(\\[“]+$')
     rxSingleQuoteL = re.compile('(?<=[ \t\r\n(\\[])\'', flags=re.DOTALL)
     rxSingleQuoteR = re.compile('(?<=[\\w.,?!:;)\\]])\'', flags=re.DOTALL)
     rxDoubleQuoteL = re.compile('(?<=[ \t\r\n(\\[])"', flags=re.DOTALL)
@@ -169,9 +169,9 @@ class PaperParser:
                                'CNG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
                                'COND|COMP|PROP|ATTR|MULT|INF(?:\\.CESS)?|RES|DEB|'
                                'NMLZ|PTCP(?:\\.(?:ACT|NEG|PST|HAB|DEB))?(?:\\.NEG)?|'
-                               'ORD|ADVLOC|ADVTEMP|EXHST|(?<![ ‘\'(])PERIOD|DELIM|APPRNUM|RUS|'
+                               'ORD|ADVLOC|ADVTEMP|EXHST|DELIM|APPRNUM|RUS|PPF|'
                                'EXCL|INCL|(?<![ ‘\'(])ADD|CONTR|'
-                               'CVB(?:\\.(?:NEG|SIM[1-5]?|LIM))?|PL(?:\\.ADJ)?|SG)\\b',
+                               'CVB(?:\\.(?:NEG|SIM[1-5]?|LIM|REAS\\.NEG))?|PL(?:\\.ADJ)?|SG)\\b',
                                flags=re.DOTALL|re.I)
     }
     rxGlossesNonGlosses = re.compile('([^$]+)')
@@ -381,7 +381,9 @@ class PaperParser:
                         p.paragraph_format.first_line_indent = Cm(1)
                     p.paragraph_format.space_before = Cm(0)
                     p.paragraph_format.space_after = Cm(0)
-                    if len(paraRuns) == 1 and re.search('^[^<>]{0,65}[^.?!:;)<> -] *$', paraRuns[0]) is not None:
+                    if (len(paraRuns) == 1
+                            and re.search('^[^<>]{0,65}[^.?!:;)<> -] *$', paraRuns[0]) is not None
+                            and not paraRuns[0].startswith('Table')):
                         p.add_run('XX.X ' + paraRuns[0]).bold = True
                         p.style = wordDoc.styles['Section header']
                         p.paragraph_format.space_before = Pt(12)
