@@ -117,6 +117,8 @@ def beserman_translit_ipa(text):
     text = text.replace('nʼ', 'nʲ')
     text = text.replace('Nʼ', 'Nʲ')
     text = text.replace('ʼ', 'ʲ')
+    text = text.replace('c', 't͡s')
+    text = text.replace('C', 'T͡s')
     return text
 
 

@@ -151,19 +151,23 @@ class PaperParser:
                                'pe|val|palaz|u[gmzd]|na|tak|odig[^ \r\n]*|se?re|ma|ik|mh|vot|tare|'
                                'ke|ja|bere|pun[eoi]?[mdz]?|gine|(so|ta)iz[^ \r\n]*|gord|marke|'
                                'e[jzmd]|(ta|so)len|(ta|so)(in|len|tek)|tros|bur|luoz|naverno|'
+                               'pis|pu|pispu|vu(?:e|i[dzm]?)?|gur|taba|polka|tarelka|ki|mesta(je[zd]?)?|'
+                               'dur|pum(?:ez?)?|sereg(?:ez?)?|reka|gorode?|azbar(e|a[mdz])?|'
+                               'pal(?:a[mdz]?)?|a[nt]aj(je[dz]?)?|ul[eoi]?|punna[mdz]?|'
+                               'kolxoz(e[dz]?)?|koko(je[dz]?)?|sugan(je[dz]?)?|kureg[^ \r\n]*|skal(je[dz]?)?|'
                                'pi|dore|vaj[eo]?|med|da|wa|olo|abi(len)?|jun|\\w+jos(len)?|\\wjez(len)?|'
                                'korka[^ \r\n]*|aslam|poti[zdm]?|kule|lue|murt[^ \r\n]*)\\b',
                                flags=re.DOTALL)
     }
     rxEnlitics = {
-        'beserman': re.compile('^([gk][iʌ]ne|uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|a)$', flags=re.I)
+        'beserman': re.compile('^([gk][iʌ]ne|uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|w?a|dak|ka)$', flags=re.I)
     }
     rxGlosses = {
         'beserman': re.compile('\\b(IDEO|REP|AUTOREP|ENIM|(?<![‘\'])ID(?!=\\.)|'
-                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|COMPL|EXIST|'
+                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|COMPL|BCKGR|FC|'
                                'PRS|PST(?:\\.EVID(?:\\.NEG(?:\\.[123]+)?(?:\\.?(?:SG|PL))?)?)?|'
                                'FUT|(?:ACC\\.)?[123](?:SG|PL)(?:\\.POSS)?|NOT\\.EXIST|'
-                               'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|(?<![ ‘\'])CAR|ADV|'
+                               'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|(?<=[-.])CAR|ADV|'
                                'LOC|LAT|EL|PROL|EGR|TERM|APP|RCS|DMS|OPT(?:\\.[123])?|'
                                'NEG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
                                'CNG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
