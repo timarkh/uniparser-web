@@ -85,6 +85,14 @@ def beserman_translit_cyrillic(text):
 
 
 def beserman_translit_ipa(text):
+    text = text.replace('č', 'č')
+    text = text.replace('Č', 'Č')
+    text = text.replace('š', 'š')
+    text = text.replace('Š', 'Š')
+    text = text.replace('ž', 'ž')
+    text = text.replace('Ž', 'Ž')
+    text = text.replace('ǯ', 'ǯ')
+    text = text.replace('Ǯ', 'Ǯ')
     text = text.replace("'", 'ʼ')
     text = text.replace('ə', 'ʌ')
     text = text.replace('Ə', 'Ʌ')

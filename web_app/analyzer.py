@@ -131,7 +131,7 @@ class Analyzer:
 
 class PaperParser:
     rxPuncR = re.compile('^[.,?!:;)"/\\-\\]”]+$')
-    rxPuncL = re.compile('^[#*(\\[“]+$')
+    rxPuncL = re.compile('^(?:[/?!. ]*\\[|[#*(\\[“]+)$')
     rxSingleQuoteL = re.compile('(?<=[ \t\r\n(\\[])\'', flags=re.DOTALL)
     rxSingleQuoteR = re.compile('(?<=[\\w.,?!:;)\\]])\'', flags=re.DOTALL)
     rxDoubleQuoteL = re.compile('(?<=[ \t\r\n(\\[])"', flags=re.DOTALL)
@@ -191,6 +191,15 @@ class PaperParser:
         text = PaperParser.rxDoubleQuoteR.sub('”', text)
         text = PaperParser.rxFigureDash.sub('–', text)
         text = PaperParser.rxEmDash.sub('—', text)
+
+        text = text.replace('č', 'č')
+        text = text.replace('Č', 'Č')
+        text = text.replace('š', 'š')
+        text = text.replace('Š', 'Š')
+        text = text.replace('ž', 'ž')
+        text = text.replace('Ž', 'Ž')
+        text = text.replace('ǯ', 'ǯ')
+        text = text.replace('Ǯ', 'Ǯ')
         return text
 
     @staticmethod
