@@ -254,6 +254,8 @@ class PaperParser:
         return template.render(context)
 
     def process_example(self, lang, num, text, trans, wordDoc=None):
+        if re.search('^[ \t]*$', text) is not None:
+            return ''
         result = self.analyzer.analyze(lang, text)
         if 'IPA' in result:
             result = result['IPA']
