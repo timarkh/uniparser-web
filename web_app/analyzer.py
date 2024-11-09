@@ -174,7 +174,7 @@ class PaperParser:
                                'COND|COMP|PROP|ATTR|MULT|INF(?:\\.CESS)?|RES|DEB|'
                                'NMLZ|PTCP(?:\\.(?:ACT|NEG|PST|HAB|DEB))?(?:\\.NEG)?|'
                                'ORD|ADVLOC|ADVTEMP|EXHST|DELIM|APPRNUM|RUS|PPF|'
-                               'EXCL|INCL|(?<![ ‘\'(])ADD|CONTR|'
+                               'EXCL|INCL|(?<![ ‘\'(])ADD|CONTR|NPST|NLOC|'
                                'CVB(?:\\.(?:NEG|SIM[1-5]?|LIM|REAS\\.NEG))?|PL(?:\\.ADJ)?|SG)\\b',
                                flags=re.DOTALL|re.I)
     }
@@ -417,7 +417,10 @@ class PaperParser:
                     p = wordDoc.add_paragraph('')
                     PaperParser.p_no_margins(wordDoc, p)
                 prevExample = True
-                textProcessed += self.process_example(lang, seg[0], seg[1], seg[2], wordDoc)
+                trans = self.rxWordLang[lang].sub(lambda m: self.analyzer.langs[lang]['translit']['IPA'](m.group(0)), seg[2])
+                textProcessed += self.process_example(lang, seg[0], seg[1],
+                                                      trans,
+                                                      wordDoc)
                 p = wordDoc.add_paragraph('')
                 PaperParser.p_no_margins(wordDoc, p)
         if not os.path.exists('docx'):
