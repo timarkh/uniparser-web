@@ -24,6 +24,7 @@ from uniparser_urmi import UrmiAnalyzer
 
 from .translit_armenian import armenian_translit_meillet
 from .translit_beserman import beserman_translit_cyrillic, beserman_translit_upa, beserman_translit_ipa
+from .translit_meadow_mari import meadow_mari_translit_upa
 from .translit_erzya import erzya_translit_upa
 from .translit_udmurt import udmurt_translit_upa
 
@@ -48,7 +49,7 @@ class Analyzer:
                     'IPA': beserman_translit_ipa,
                     'Cyrillic': beserman_translit_cyrillic
                 }
-            }
+            },
             # 'buryat': {
             #     'name': 'Buryat',
             #     'analyzer': BuryatAnalyzer()
@@ -71,10 +72,13 @@ class Analyzer:
             #     'name': 'Komi Zyrian',
             #     'analyzer': KomiZyrianAnalyzer()
             # },
-            # 'meadow_mari': {
-            #     'name': 'Meadow Mari',
-            #     'analyzer': MeadowMariAnalyzer()
-            # },
+            'meadow_mari': {
+                'name': 'Meadow Mari',
+                'analyzer': MeadowMariAnalyzer(),
+                'translit': {
+                    'UPA': meadow_mari_translit_upa
+                }
+            },
             # 'moksha': {
             #     'name': 'Moksha',
             #     'analyzer': MokshaAnalyzer()
@@ -99,7 +103,7 @@ class Analyzer:
             #     'analyzer': UrmiAnalyzer()
             # }
         }
-        self.disamb_langs = ['albanian', 'udmurt', 'beserman', 'eastern_armenian']
+        self.disamb_langs = ['albanian', 'udmurt', 'beserman', 'eastern_armenian', 'meadow_mari']
 
     def analyze(self, lang, sentence):
         if lang not in self.langs:
@@ -157,10 +161,14 @@ class PaperParser:
                                'kolxoz(e[dz]?)?|koko(je[dz]?)?|sugan(je[dz]?)?|kureg[^ \r\n]*|skal(je[dz]?)?|'
                                'pi|dore|vaj[eo]?|med|da|wa|olo|abi(len)?|jun|\\w+jos(len)?|\\wjez(len)?|'
                                'korka[^ \r\n]*|aslam|poti[zdm]?|kule|lue|murt[^ \r\n]*)\\b',
-                               flags=re.DOTALL)
+                               flags=re.DOTALL),
+        'meadow_mari': re.compile('(?<= )-[\\w(́)]*[βəʼčšžöüɨ́ʉ̯ʌɘʲ͡ɕʂʐʑˌҥӧӱʙ̥ʔ̩̥ː][\\ẃ()-]*|'
+                               '[-\\ẃ]*[βəʼčšžöüɨ́ʉ̯ʌɘʲ͡ɕʂʐʑˌҥӧӱʙ̥ʔ̩][-\\ẃ]*|'
+                               '(?<= )-[\\w()-]+-(?= )|(?<= )-[\\w()-]+\\b')
     }
     rxEnlitics = {
-        'beserman': re.compile('^([gk][iʌ]ne|uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|w?a|dak|ka)$', flags=re.I)
+        'beserman': re.compile('^([gk][iʌ]ne|uk|ik|nʲi|vedʲ|ʐe|to|no|na|ʂatʲ|ke|pe|w?a|dak|ka)$', flags=re.I),
+        'meadow_mari': re.compile('^$', flags=re.I)
     }
     rxGlosses = {
         'beserman': re.compile('\\b(IDEO|REP|AUTOREP|ENIM|(?<![‘\'])ID(?!=\\.)|'
@@ -173,6 +181,20 @@ class PaperParser:
                                'CNG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
                                'COND|COMP|PROP|ATTR|MULT|INF(?:\\.CESS)?|RES|DEB|'
                                'NMLZ|PTCP(?:\\.(?:ACT|NEG|PST|HAB|DEB))?(?:\\.NEG)?|'
+                               'ORD|ADVLOC|ADVTEMP|EXHST|DELIM|APPRNUM|RUS|PPF|'
+                               'EXCL|INCL|(?<![ ‘\'(])ADD|CONTR|NPST|NLOC|'
+                               'CVB(?:\\.(?:NEG|SIM[1-5]?|LIM|REAS\\.NEG))?|PL(?:\\.ADJ)?|SG)\\b',
+                               flags=re.DOTALL|re.I),
+        'meadow_mari': re.compile('\\b(IDEO|REP|AUTOREP|ENIM|(?<![‘\'])ID(?!=\\.)|'
+                               'IAM|Q|IMP(?:\\.MTG)?|PROH|HESIT|COMPL|BCKGR|FC|'
+                               'PRS|PST2?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
+                               'FUT|(?:ACC\\.)?[123](?:SG|PL)(?:\\.POSS)?|NOT\\.EXIST|'
+                               'INDEF|ITER|DETR|CAUS|NOM|GEN2?|ACC(?:\\.PL)?|DAT|INS|(?<=[-.])CAR|ADV|'
+                               'LOC|LAT|ILL|EL(?:\\.FULL)?|SIM|(?:OPT|DESID)(?:\\.[123])?|'
+                               'NEG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
+                               'CNG(?:\\.(?:FUT|PRS|PST))?(?:\\.[123]+)?(?:\\.?(?:SG|PL))?|'
+                               'COND|COMP|PROP|ATTR|MULT|INF(?:\\.CESS)?|RES|DEB|'
+                               'NMLZ|PTCP(?:\\.(?:ACT|PASS|NEG|PST|HAB|DEB))?(?:\\.NEG)?|'
                                'ORD|ADVLOC|ADVTEMP|EXHST|DELIM|APPRNUM|RUS|PPF|'
                                'EXCL|INCL|(?<![ ‘\'(])ADD|CONTR|NPST|NLOC|'
                                'CVB(?:\\.(?:NEG|SIM[1-5]?|LIM|REAS\\.NEG))?|PL(?:\\.ADJ)?|SG)\\b',
@@ -259,6 +281,8 @@ class PaperParser:
         result = self.analyzer.analyze(lang, text)
         if 'IPA' in result:
             result = result['IPA']
+        elif 'UPA' in result:
+            result = result['UPA']
         else:
             result = result['default']
         words = []
@@ -285,7 +309,9 @@ class PaperParser:
             for ana in w:
                 curWfParts.add(ana['wfGlossed'])
                 curGlosses.add(ana['gloss'])
-                if 'trans_ru' in ana:
+                if 'trans_en' in ana:
+                    curTrans.add(ana['trans_en'])
+                elif 'trans_ru' in ana:
                     curTrans.add(ana['trans_ru'])
             curGlosses = [g for g in sorted(curGlosses, key=lambda x: (x.count('-'), len(x), x))
                           if len(g) > 0]
@@ -337,7 +363,7 @@ class PaperParser:
                 p = table.cell(iRow * 2 + 1, iCol).paragraphs[0]
                 p.style = wordDoc.styles['Gloss']
                 PaperParser.p_no_margins(wordDoc, p, 'Gloss')
-                if re.search('^(?:[ /*?!.,()_-]*|\\[S[0-9]+\\]:?)$', words[iCell].strip()) is not None:
+                if re.search('^(?:[ /*?!.,()_«»-]*|\\[S[0-9]+\\]:?)$', words[iCell].strip()) is not None:
                     continue
                 PaperParser.smallcaps_glosses(p, glosses[iCell].strip(), lang)
             p = table.cell(nRows * 2, 1).paragraphs[0]
@@ -379,11 +405,13 @@ class PaperParser:
             elif len(seg[3]) > 0 and len(seg[1]) <= 0:
                 para = seg[3]
                 if lang in self.rxWordLang:
-                    if 'IPA' in self.analyzer.langs[lang]['translit']:
-                        transliterator = self.analyzer.langs[lang]['translit']['IPA']
-                    else:
-                        transliterator = lambda s: s
-                    para = self.rxWordLang[lang].sub(lambda m: '<i>' + transliterator(m.group(0)) + '</i>', para)
+                    translit = lambda x: x
+                    if 'translit' in self.analyzer.langs[lang]:
+                        if 'IPA' in self.analyzer.langs[lang]['translit']:
+                            translit = self.analyzer.langs[lang]['translit']['IPA']
+                        elif 'UPA' in self.analyzer.langs[lang]['translit']:
+                            translit = self.analyzer.langs[lang]['translit']['UPA']
+                    para = self.rxWordLang[lang].sub(lambda m: '<i>' + translit(m.group(0)) + '</i>', para)
                 textProcessed += '<p>' + para.replace('\n', '</p>\n<p>')[:-3]
                 paraRuns = re.findall('<i>.+?</i>|(?:[^<]|<[^i])+', para.strip('\r\n'))
                 if len(paraRuns) > 1 or (len(paraRuns) == 1
@@ -417,7 +445,13 @@ class PaperParser:
                     p = wordDoc.add_paragraph('')
                     PaperParser.p_no_margins(wordDoc, p)
                 prevExample = True
-                trans = self.rxWordLang[lang].sub(lambda m: self.analyzer.langs[lang]['translit']['IPA'](m.group(0)), seg[2])
+                translit = lambda x: x
+                if 'translit' in self.analyzer.langs[lang]:
+                    if 'IPA' in self.analyzer.langs[lang]['translit']:
+                        translit = self.analyzer.langs[lang]['translit']['IPA']
+                    elif 'UPA' in self.analyzer.langs[lang]['translit']:
+                        translit = self.analyzer.langs[lang]['translit']['UPA']
+                trans = self.rxWordLang[lang].sub(lambda m: translit(m.group(0)), seg[2])
                 textProcessed += self.process_example(lang, seg[0], seg[1],
                                                       trans,
                                                       wordDoc)

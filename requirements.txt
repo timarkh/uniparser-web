@@ -13,3 +13,4 @@ uniparser_ossetic
 uniparser_turoyo
 uniparser_udmurt
 uniparser_urmi
+python-docx
