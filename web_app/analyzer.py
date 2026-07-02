@@ -78,14 +78,16 @@ class Analyzer:
                 'analyzer': KomiZyrianAnalyzer()
             },
             'mansi_lat': {
-                            'name': 'Mansi (Latin-based)',
-                            'analyzer': MansiAnalyzer(),
-                            'translit': {
-                                'UPA': mansi_translit_upa,
-                                'IPA': mansi_translit_ipa,
-                                'Cyrillic': mansi_translit_cyrillic
-                            }
-                        },
+                'name': 'Mansi (Latin-based)',
+                'analyzer': MansiAnalyzer(),
+                'translit': {
+                    'UPA': mansi_translit_upa,
+                    'IPA': mansi_translit_ipa,
+                    'Cyrillic': mansi_translit_cyrillic
+                },
+                'rx_words': re.compile('\\w[\\w\'-]+[\\w\']|\\w+|[^\\w]+'),
+                'rx_word': re.compile('\\w[\\w\'-]+[\\w\']|\\w+')
+            },
             'meadow_mari': {
                 'name': 'Meadow Mari',
                 'analyzer': MeadowMariAnalyzer(),
@@ -122,10 +124,16 @@ class Analyzer:
     def analyze(self, lang, sentence):
         if lang not in self.langs:
             return ''
+        rxWords = self.rxWords
+        rxWord = self.rxWord
+        if 'rx_words' in self.langs[lang]:
+            rxWords = self.langs[lang]['rx_words']
+        if 'rx_word' in self.langs[lang]:
+            rxWord = self.langs[lang]['rx_word']
         sentence = self.rxBadChars.sub('', sentence)[:2048]
         if lang == 'mansi_lat':
             sentence = mansi_clean(sentence)
-        tokens = [t.strip() for t in self.rxWords.findall(sentence.strip())
+        tokens = [t.strip() for t in rxWords.findall(sentence.strip())
                   if self.rxSpace.search(t) is None]
         result = []
         if lang in self.disamb_langs:
