@@ -24,7 +24,7 @@ from uniparser_urmi import UrmiAnalyzer
 try:
     from uniparser_mansi_lat import MansiAnalyzer
 except:
-    pass
+    print('No Mansi analyzer found in the local directory.')
 
 from .translit_armenian import armenian_translit_meillet
 from .translit_beserman import beserman_translit_cyrillic, beserman_translit_upa, beserman_translit_ipa
@@ -39,8 +39,26 @@ class Analyzer:
     rxWord = re.compile('\\w[\\w\'-]+\\w|\\w+')
     rxSpace = re.compile('^[ \r\n\t]+$')
     rxBadChars = re.compile('[<>&]')
+    rxHyphen = re.compile('[=-]')
 
     def __init__(self):
+        # self.langs = {
+        #     'mansi_lat': {
+        #         'name': 'Mansi (Latin-based)',
+        #         'analyzer': [
+        #             MansiAnalyzer(),
+        #             MansiAnalyzer(mode='nodiacritics'),
+        #             MansiAnalyzer(mode='nopalatal')
+        #         ],
+        #         'translit': {
+        #             'UPA': mansi_translit_upa,
+        #             'IPA': mansi_translit_ipa,
+        #             'Cyrillic': mansi_translit_cyrillic
+        #         },
+        #         'rx_words': re.compile('\\w[\\w\'-]+[\\w\']|\\w+|[^\\w]+'),
+        #         'rx_word': re.compile('\\w[\\w\'-]+[\\w\']|\\w+')
+        #     }
+        # }
         self.langs = {
             'albanian': {
                 'name': 'Albanian',
@@ -79,7 +97,11 @@ class Analyzer:
             },
             'mansi_lat': {
                 'name': 'Mansi (Latin-based)',
-                'analyzer': MansiAnalyzer(),
+                'analyzer': [
+                    MansiAnalyzer(),
+                    MansiAnalyzer(mode='nodiacritics'),
+                    MansiAnalyzer(mode='nopalatal')
+                ],
                 'translit': {
                     'UPA': mansi_translit_upa,
                     'IPA': mansi_translit_ipa,
@@ -120,6 +142,7 @@ class Analyzer:
             }
         }
         self.disamb_langs = ['albanian', 'udmurt', 'beserman', 'eastern_armenian', 'meadow_mari']
+        self.remove_hyphens_langs = ['mansi_lat']
 
     def analyze(self, lang, sentence):
         if lang not in self.langs:
@@ -133,13 +156,26 @@ class Analyzer:
         sentence = self.rxBadChars.sub('', sentence)[:2048]
         if lang == 'mansi_lat':
             sentence = mansi_clean(sentence)
+        if lang in self.remove_hyphens_langs:
+            sentence = self.rxHyphen.sub('', sentence)
         tokens = [t.strip() for t in rxWords.findall(sentence.strip())
                   if self.rxSpace.search(t) is None]
         result = []
+        analyzer = self.langs[lang]['analyzer']
+        if type(analyzer) is not list:
+            analyzer = [analyzer]
         if lang in self.disamb_langs:
-            result = self.langs[lang]['analyzer'].analyze_words(tokens, disambiguate=True, format='json')
+            result = analyzer[0].analyze_words(tokens, disambiguate=True, format='json')
         else:
-            result = self.langs[lang]['analyzer'].analyze_words(tokens, format='json')
+            result = analyzer[0].analyze_words(tokens, format='json')
+            for iRes in range(len(result)):
+                for iAnalyzer in range(1, len(analyzer)):
+                    # Try lax versions of the analyzer
+                    if len(result[iRes]) <= 0 or 'lemma' not in result[iRes][0] or not result[iRes][0]['lemma']:
+                        result[iRes] = analyzer[iAnalyzer].analyze_words(tokens[iRes], format='json')
+                        for iAna in range(len(result[iRes])):
+                            if 'lemma' in result[iRes][iAna] and result[iRes][iAna]['lemma']:
+                                result[iRes][iAna]['lax'] = True
         result = {'default': result}
         if 'translit' in self.langs[lang]:
             for translit, f in self.langs[lang]['translit'].items():

@@ -2,11 +2,12 @@
 <tr>
 {% for w in words.default %}
 	<td>
-	<p class="wf">{{ w[0].wf }}</p>
+	<p class="wf{% if w[0].lax %} lax_ana{% endif %}">{{ w[0].wf }}</p>
 	{% for ana in w %}
 	{% if loop.index > 1 %}<hr>{% endif %}
 	{% if ana.wfGlossed %}<p class="wfGlossed"><nobr>{{ ana.wfGlossed }}</nobr></p>{% endif %}
 	{% if ana.gloss %}<p class="gloss"><nobr>{{ ana.gloss }}</nobr></p>{% endif %}
+	{% if ana.gloss_ru %}<p class="gloss"><nobr>{{ ana.gloss_ru }}</nobr></p>{% endif %}
 	{% if ana.lemma %}<p class="lemma">{{ ana.lemma }}</p>{% endif %}
 	{% if ana.gramm %}<p class="gramm">{{ ana.gramm | join(",") }}</p>{% endif %}
 	{% if ana.trans_en %}<p class="trans">{{ ana.trans_en }}</p>{% endif %}

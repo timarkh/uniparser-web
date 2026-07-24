@@ -30,6 +30,10 @@ def index():
 
 @app.route('/<lang>')
 def index_lang(lang):
+    # analysis = a.analyze(lang, 'ti manriɣ lawi xajtatālne utaɣən.')
+    # print(analysis)
+    # analysisHTML = render_template('analysis.html', words=analysis)
+    # print(analysisHTML)
     if lang in a.langs:
         if request.args is not None and 'mode' in request.args and request.args['mode'] == 'paper':
             return render_template('index.html', lang=lang, languages=a.langs, mode='paper')
