@@ -39,9 +39,13 @@ class Analyzer:
     rxWord = re.compile('\\w[\\w\'-]+\\w|\\w+')
     rxSpace = re.compile('^[ \r\n\t]+$')
     rxBadChars = re.compile('[<>&]')
-    rxHyphen = re.compile('[=-]')
+    rxHyphen = re.compile('[<>-]')
+    rxCliticHyphen = re.compile('[=]')
 
     def __init__(self):
+        self.langs= {}
+
+        # DEBUG BLOCK
         # self.langs = {
         #     'mansi_lat': {
         #         'name': 'Mansi (Latin-based)',
@@ -59,89 +63,91 @@ class Analyzer:
         #         'rx_word': re.compile('\\w[\\w\'-]+[\\w\']|\\w+')
         #     }
         # }
-        self.langs = {
-            'albanian': {
-                'name': 'Albanian',
-                'analyzer': AlbanianAnalyzer()
-            },
-            'beserman': {
-                'name': 'Beserman (Latin-based)',
-                'analyzer': BesermanLatAnalyzer(),
-                'translit': {
-                    'UPA': beserman_translit_upa,
-                    'IPA': beserman_translit_ipa,
-                    'Cyrillic': beserman_translit_cyrillic
-                }
-            },
-            'buryat': {
-                'name': 'Buryat',
-                'analyzer': BuryatAnalyzer()
-            },
-            'eastern_armenian': {
-                'name': 'Eastern Armenian',
-                'analyzer': EasternArmenianAnalyzer(),
-                'translit': {
-                    'Quasi-Meillet': armenian_translit_meillet
-                }
-            },
-            'erzya': {
-                'name': 'Erzya',
-                'analyzer': ErzyaAnalyzer(),
-                'translit': {
-                    'UPA': erzya_translit_upa
-                }
-            },
-            'komi_zyrian': {
-                'name': 'Komi Zyrian',
-                'analyzer': KomiZyrianAnalyzer()
-            },
-            'mansi_lat': {
-                'name': 'Mansi (Latin-based)',
-                'analyzer': [
-                    MansiAnalyzer(),
-                    MansiAnalyzer(mode='nodiacritics'),
-                    MansiAnalyzer(mode='nopalatal')
-                ],
-                'translit': {
-                    'UPA': mansi_translit_upa,
-                    'IPA': mansi_translit_ipa,
-                    'Cyrillic': mansi_translit_cyrillic
+
+        if not self.langs:
+            self.langs = {
+                'albanian': {
+                    'name': 'Albanian',
+                    'analyzer': AlbanianAnalyzer()
                 },
-                'rx_words': re.compile('\\w[\\w\'-]+[\\w\']|\\w+|[^\\w]+'),
-                'rx_word': re.compile('\\w[\\w\'-]+[\\w\']|\\w+')
-            },
-            'meadow_mari': {
-                'name': 'Meadow Mari',
-                'analyzer': MeadowMariAnalyzer(),
-                'translit': {
-                    'UPA': meadow_mari_translit_upa
+                'beserman': {
+                    'name': 'Beserman (Latin-based)',
+                    'analyzer': BesermanLatAnalyzer(),
+                    'translit': {
+                        'UPA': beserman_translit_upa,
+                        'IPA': beserman_translit_ipa,
+                        'Cyrillic': beserman_translit_cyrillic
+                    }
+                },
+                'buryat': {
+                    'name': 'Buryat',
+                    'analyzer': BuryatAnalyzer()
+                },
+                'eastern_armenian': {
+                    'name': 'Eastern Armenian',
+                    'analyzer': EasternArmenianAnalyzer(),
+                    'translit': {
+                        'Quasi-Meillet': armenian_translit_meillet
+                    }
+                },
+                'erzya': {
+                    'name': 'Erzya',
+                    'analyzer': ErzyaAnalyzer(),
+                    'translit': {
+                        'UPA': erzya_translit_upa
+                    }
+                },
+                'komi_zyrian': {
+                    'name': 'Komi Zyrian',
+                    'analyzer': KomiZyrianAnalyzer()
+                },
+                'mansi_lat': {
+                    'name': 'Mansi (Latin-based)',
+                    'analyzer': [
+                        MansiAnalyzer(),
+                        MansiAnalyzer(mode='nodiacritics'),
+                        MansiAnalyzer(mode='nopalatal')
+                    ],
+                    'translit': {
+                        'UPA': mansi_translit_upa,
+                        'IPA': mansi_translit_ipa,
+                        'Cyrillic': mansi_translit_cyrillic
+                    },
+                    'rx_words': re.compile('\\w[\\w\'-]+[\\w\']|\\w+|[^\\w]+'),
+                    'rx_word': re.compile('\\w[\\w\'-]+[\\w\']|\\w+')
+                },
+                'meadow_mari': {
+                    'name': 'Meadow Mari',
+                    'analyzer': MeadowMariAnalyzer(),
+                    'translit': {
+                        'UPA': meadow_mari_translit_upa
+                    }
+                },
+                'moksha': {
+                    'name': 'Moksha',
+                    'analyzer': MokshaAnalyzer()
+                },
+                'ossetic': {
+                    'name': 'Ossetic (Iron)',
+                    'analyzer': OsseticAnalyzer()
+                },
+                'turoyo': {
+                    'name': 'Ṭuroyo',
+                    'analyzer': TuroyoAnalyzer()
+                },
+                'udmurt': {
+                    'name': 'Udmurt',
+                    'analyzer': UdmurtAnalyzer(),
+                    'translit': {
+                        'UPA': udmurt_translit_upa
+                    }
+                },
+                'urmi': {
+                    'name': 'Christian Urmi (Assyrian Neo-Aramaic), Latin-based',
+                    'analyzer': UrmiAnalyzer()
                 }
-            },
-            'moksha': {
-                'name': 'Moksha',
-                'analyzer': MokshaAnalyzer()
-            },
-            'ossetic': {
-                'name': 'Ossetic (Iron)',
-                'analyzer': OsseticAnalyzer()
-            },
-            'turoyo': {
-                'name': 'Ṭuroyo',
-                'analyzer': TuroyoAnalyzer()
-            },
-            'udmurt': {
-                'name': 'Udmurt',
-                'analyzer': UdmurtAnalyzer(),
-                'translit': {
-                    'UPA': udmurt_translit_upa
-                }
-            },
-            'urmi': {
-                'name': 'Christian Urmi (Assyrian Neo-Aramaic), Latin-based',
-                'analyzer': UrmiAnalyzer()
             }
-        }
-        self.disamb_langs = ['albanian', 'udmurt', 'beserman', 'eastern_armenian', 'meadow_mari']
+        self.disamb_langs = ['albanian', 'udmurt', 'beserman', 'eastern_armenian', 'meadow_mari', 'mansi_lat']
         self.remove_hyphens_langs = ['mansi_lat']
 
     def analyze(self, lang, sentence):
@@ -158,6 +164,7 @@ class Analyzer:
             sentence = mansi_clean(sentence)
         if lang in self.remove_hyphens_langs:
             sentence = self.rxHyphen.sub('', sentence)
+            sentence = self.rxCliticHyphen.sub(' ', sentence)
         tokens = [t.strip() for t in rxWords.findall(sentence.strip())
                   if self.rxSpace.search(t) is None]
         result = []
@@ -171,7 +178,7 @@ class Analyzer:
             for iRes in range(len(result)):
                 for iAnalyzer in range(1, len(analyzer)):
                     # Try lax versions of the analyzer
-                    if len(result[iRes]) <= 0 or 'lemma' not in result[iRes][0] or not result[iRes][0]['lemma']:
+                    if not result[iRes] or 'lemma' not in result[iRes][0] or not result[iRes][0]['lemma']:
                         result[iRes] = analyzer[iAnalyzer].analyze_words(tokens[iRes], format='json')
                         for iAna in range(len(result[iRes])):
                             if 'lemma' in result[iRes][iAna] and result[iRes][iAna]['lemma']:

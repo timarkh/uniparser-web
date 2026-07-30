@@ -8,7 +8,7 @@ dic2cyr = {
     'z': 'з', 'i': 'ы', 'j': 'й', 'k': 'к',
     'l': 'л', 'm': 'м', 'n': 'н',
     'o': 'о', 'p': 'п', 'r': 'р',
-    's': 'с', 'ɕ': "s'", 't': 'т', 'u': 'у',
+    's': 'с', 'ɕ': "с'", 't': 'т', 'u': 'у',
     'c': 'ц', 'w': 'в', 'x': 'х',
     'y': 'ы', 'f': 'ф',
     'ā': 'а̄',
@@ -20,30 +20,34 @@ dic2cyr = {
 }
 
 cyrHard2Soft = {
-                'а': 'я', 'а̄': 'я̄',
-                'э': 'е', 'э̄': 'ē',
-                'ы': 'и', 'ы̄': 'ӣ',
-                'о': 'ё', 'о̄': 'ё̄',
-                'у': 'ю', 'ӯ': 'ю̄'
+    'а': 'я', 'а̄': 'я̄',
+    'э': 'е', 'э̄': 'ē',
+    'ы': 'и', 'ы̄': 'ӣ',
+    'о': 'ё', 'о̄': 'ё̄',
+    'у': 'ю', 'ӯ': 'ю̄'
 }
 
 badChars = {
-        'ā': 'ā',
-        'ō': 'ō',
-        'ē': 'ē',
-        'ī': 'ī',
-        'ū': 'ū'
-    }
+    'ā': 'ā',
+    'ō': 'ō',
+    'ē': 'ē',
+    'ī': 'ī',
+    'ū': 'ū'
+}
 
-rxSoften = re.compile('\'([аэыоу])', flags=re.I)
+rxSoften = re.compile('\'([аэыоуӯ])', flags=re.I)
 rxCyrMultSoften = re.compile('\'{2,}')
-rxNeutral1 = re.compile('(?<=[бвгджзкмпрфхцчшщй\'])([э])', re.I)
+rxNeutral1 = re.compile('(?<=[бвгджзкмпрфхцчшщй\'])([эы])', re.I)
 rxNeutral2 = re.compile('(\\b)(ы)', re.I)
-rxCJV = re.compile('(?<=[бвгджзӟклмнӈпрстфхцчшщ])й([аяэеоёуюыи])', re.I)
-rxVJV = re.compile('(?<=[аеёиоуыэюя̄\'])й([аэыоу])', flags=re.I)
-rxJV = re.compile('\\bй([аэыоу])')
-rxJVCapital = re.compile('\\bЙ([аэыоуАЭЫОУ])')
-rxExtraSoft = re.compile('([лнст])ь\\1(?=[ьяеёию])')
+rxCJV = re.compile('(?<=[бвгджзӟклмнӈпрстфхцчшщ])й([аяэеоёуӯюыиӣ])', re.I)
+rxVJV = re.compile('(?<=[аеёиӣоуӯыэюя̄\'])й([аэыоуӯ])', flags=re.I)
+rxJV = re.compile('\\bй([аэыоуӯ])')
+rxJVCapital = re.compile('\\bЙ([аэыоуӯАЭЫОУӮ])')
+rxExtraSoft = re.compile('([лнст])ь\\1(?=[ьяеёиӣю])')
+rxSoftYLab = re.compile("['ь]ы([мпб])")
+rxSoftYLabCapital = re.compile("['Ь]Ы([МПБ])")
+rxYLab = re.compile('ы([мпб])')
+rxYLabCapital = re.compile('Ы([МПБ])')
 
 rxCyrillic = re.compile('^[а-яёӟӥӧўөА-ЯЁӞӤӦЎӨ.,;:!?\\-()\\[\\]{}<>]*$')
 
@@ -77,6 +81,10 @@ def mansi_translit_cyrillic(text):
     res = ''.join(letters)
     res = res.replace('h', 'х')
     res = res.replace('H', 'Х')
+    res = rxSoftYLab.sub('ю\\1', res)
+    res = rxSoftYLabCapital.sub('Ю\\1', res)
+    res = rxYLab.sub('у\\1', res)
+    res = rxYLabCapital.sub('У\\1', res)
     res = rxSoften.sub(lambda m: cyrHard2Soft[m.group(1).lower()], res)
     res = rxVJV.sub(lambda m: cyrHard2Soft[m.group(1).lower()], res)
     res = rxVJV.sub(lambda m: cyrHard2Soft[m.group(1).lower()], res)
