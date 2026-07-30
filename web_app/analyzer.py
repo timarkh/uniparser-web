@@ -175,14 +175,14 @@ class Analyzer:
             result = analyzer[0].analyze_words(tokens, disambiguate=True, format='json')
         else:
             result = analyzer[0].analyze_words(tokens, format='json')
-            for iRes in range(len(result)):
-                for iAnalyzer in range(1, len(analyzer)):
-                    # Try lax versions of the analyzer
-                    if not result[iRes] or 'lemma' not in result[iRes][0] or not result[iRes][0]['lemma']:
-                        result[iRes] = analyzer[iAnalyzer].analyze_words(tokens[iRes], format='json')
-                        for iAna in range(len(result[iRes])):
-                            if 'lemma' in result[iRes][iAna] and result[iRes][iAna]['lemma']:
-                                result[iRes][iAna]['lax'] = True
+        for iRes in range(len(result)):
+            for iAnalyzer in range(1, len(analyzer)):
+                # Try lax versions of the analyzer
+                if not result[iRes] or 'lemma' not in result[iRes][0] or not result[iRes][0]['lemma']:
+                    result[iRes] = analyzer[iAnalyzer].analyze_words(tokens[iRes], format='json')
+                    for iAna in range(len(result[iRes])):
+                        if 'lemma' in result[iRes][iAna] and result[iRes][iAna]['lemma']:
+                            result[iRes][iAna]['lax'] = True
         result = {'default': result}
         if 'translit' in self.langs[lang]:
             for translit, f in self.langs[lang]['translit'].items():
