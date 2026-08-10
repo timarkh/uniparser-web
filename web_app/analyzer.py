@@ -169,10 +169,11 @@ class Analyzer:
                   if self.rxSpace.search(t) is None]
         result = []
         analyzer = self.langs[lang]['analyzer']
-        if lang == 'mansi_lat':
-            analyzer.glossBrackets = True
         if type(analyzer) is not list:
             analyzer = [analyzer]
+        if lang == 'mansi_lat':
+            for a in analyzer:
+                a.glossBrackets = True
         if lang in self.disamb_langs:
             result = analyzer[0].analyze_words(tokens, disambiguate=True, format='json')
         else:
@@ -181,8 +182,6 @@ class Analyzer:
             for iAnalyzer in range(1, len(analyzer)):
                 # Try lax versions of the analyzer
                 if not result[iRes] or 'lemma' not in result[iRes][0] or not result[iRes][0]['lemma']:
-                    if lang == 'mansi_lat':
-                        analyzer[iAnalyzer].glossBrackets = True
                     result[iRes] = analyzer[iAnalyzer].analyze_words(tokens[iRes], format='json')
                     for iAna in range(len(result[iRes])):
                         if 'lemma' in result[iRes][iAna] and result[iRes][iAna]['lemma']:
